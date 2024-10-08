@@ -34,21 +34,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          path: plugin
-      - name: Build the plugin
-        run: make build
-        working-directory: plugin
+          path: rules
       - id: StringRepoName
         uses: ASzc/change-string-case-action@v5
         with:
           string: ${{ github.repository }}
       - name: Upload OCI artifacts to GitHub packages
         run: |
-              MAJOR=$(echo ${{ github.ref_name }} | cut -f1 -d".")
-              MINOR=$(echo ${{ github.ref_name }} | cut -f1,2 -d".")
               DIR=$(pwd)
 
-              cd rules/
+              VERSION=$(echo ${{ github.ref_name }} | sed 's/v//')
+
+              cd rules/rules
               for i in $(ls *.yaml);
               do
                 cat ${i} >> ${{ env.RULES_NAME }}.yaml
@@ -56,33 +53,12 @@ jobs:
               done
               sed -i -e 's/ *$//g' ${{ env.RULES_NAME }}.yaml
               $DIR/tools/falcoctl/falcoctl registry push \
-              ${{ env.OCI_REGISTRY }}/${{ steps.StringRepoName.outputs.lowercase }}/ruleset/${{ env.RULES_NAME }}:${{ github.ref_name }} \
+              ${{ env.OCI_REGISTRY }}/${{ steps.StringRepoName.outputs.lowercase }}/ruleset/${{ env.RULES_NAME }}:${VERSION} \
               --config /dev/null \
               --type rulesfile \
-              --version "${{ github.ref_name }}" \
-              --tag latest --tag $MAJOR --tag $MINOR \
+              --version "${VERSION}" \
+              --tag latest --add-floating-tags \
               --name ${{ env.RULES_NAME }} \
-              ${{ env.RULES_NAME }}_rules.yaml
+              ${{ env.RULES_NAME }}.yaml
         env:
           FALCOCTL_REGISTRY_AUTH_BASIC: ${{ env.OCI_REGISTRY }},${{ github.repository_owner }},${{ secrets.GITHUB_TOKEN }}
-
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Setup Golang
-        uses: actions/setup-go@v3
-        with:
-          go-version: '1.19'
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v4
-        with:
-          version: latest
-          args: release --clean --timeout 120m
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LDFLAGS: "-buildmode=c-shared"
-          GOPATH: /home/runner/go

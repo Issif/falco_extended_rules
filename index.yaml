@@ -1,7 +1,7 @@
 - name: falco_extended_rules
   type: rulesfile
   registry: ghcr.io
-  repository: CloudDefenseAI/falco_extended_rules/ruleset/falco_extended_rules
+  repository: issif/falco_extended_rules/ruleset/falco_extended_rules
   description: Extended Falco rules developed by CloudDefense.ai
   home: https://github.com/CloudDefenseAI/falco_extended_rules/tree/master/rules
   keywords:
@@ -11,5 +11,7 @@
   maintainers:
     - email: contact@clouddefense.ai
       name: CloudDefenseAI
+    - email: issif+github@gadz.org
+      name: Issif
   sources:
-    - https://github.com/CloudDefenseAI/falco_extended_rules/tree/main/rules/docker_rules.yaml
+    - https://github.com/CloudDefenseAI/falco_extended_rules/tree/master/rules
